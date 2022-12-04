@@ -6,6 +6,7 @@ import com.springboot.joinpractice.exception.AppException;
 import com.springboot.joinpractice.exception.ErrorCode;
 import com.springboot.joinpractice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
     // DB에 있는 userName 과 중복체크해야되기 때문에 DB와 연결이 필요
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder encoder;
 
     public String join(String userName, String password){
         // 1. userName 중복 check
@@ -27,7 +29,8 @@ public class UserService {
         // save(user) < 로 저장한다.
         User user = User.builder()
                 .userName(userName)
-                .password(password)
+                // BCryptPasswordEncoder의 encoder 메서드를 사용하여 password를 암호화한다.
+                .password(encoder.encode(password))
                 .build();
         userRepository.save(user);
 
