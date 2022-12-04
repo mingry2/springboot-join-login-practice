@@ -5,16 +5,24 @@ import com.springboot.joinpractice.domain.dto.UserJoinRequest;
 import com.springboot.joinpractice.exception.AppException;
 import com.springboot.joinpractice.exception.ErrorCode;
 import com.springboot.joinpractice.repository.UserRepository;
+import com.springboot.joinpractice.utils.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
     // DB에 있는 userName 과 중복체크해야되기 때문에 DB와 연결이 필요
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder encoder;
+
+    @Value("${jwt.token.secret}")
+    private String key;
+    private Long expireTimeMs = 1000 * 60 * 60L; // 1시간
 
     public String join(String userName, String password){
         // 1. userName 중복 check
@@ -43,13 +51,15 @@ public class UserService {
         User selectedUser = userRepository.findByUserName(userName)
                 // NOT_NOTFOUND가 나야함
                 .orElseThrow(() -> new AppException(ErrorCode.USERNAME_NOTFOUND, userName + "이 없습니다"));
+
         // password 틀림
-        if(!encoder.matches(selectedUser.getPassword(), password)) {
+        log.info("selectedPw: {} pw: {}", selectedUser.getPassword(), password);
+        if(!encoder.matches(password, selectedUser.getPassword())) {
             throw new AppException(ErrorCode.INVALID_PASSWORD, "password를 잘 못 입력하였습니다.");
         }
 
         // 앞에서 exception 안났으면 token 발행
-
-        return "token return";
+        String token = JwtTokenUtil.createToken(selectedUser.getUserName(), key, expireTimeMs);
+        return token;
     }
 }
