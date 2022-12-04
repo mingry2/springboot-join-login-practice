@@ -1,6 +1,7 @@
 package com.springboot.joinpractice.controller;
 
 import com.springboot.joinpractice.domain.dto.UserJoinRequest;
+import com.springboot.joinpractice.domain.dto.UserLoginRequest;
 import com.springboot.joinpractice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,13 @@ public class UserController {
     public ResponseEntity<String> join(@RequestBody UserJoinRequest dto) {
         userService.join(dto.getUserName(),dto.getPassword());
         return ResponseEntity.ok().body("회원가입이 성공하였습니다.");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody UserLoginRequest dto) {
+        // userService.login애서 성공하면 token을 반환할것이기 때문
+        String token = userService.login(dto.getUserName(),dto.getPassword());
+        return ResponseEntity.ok().body(token);
     }
 
 }
